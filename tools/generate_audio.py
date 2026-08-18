@@ -183,12 +183,14 @@ def write_wave(name: str, samples: list[float]) -> None:
 
 
 def make_cover_bgm() -> None:
-    bpm = 150
+    # A calm, scenic opening loop: enough pulse to feel interactive without
+    # competing with the illustrated Jiangxi landscape.
+    bpm = 96
     beat = 60 / bpm
-    bars = 10
+    bars = 8
     duration = bars * beat * 4
     buf = empty(duration)
-    roots = [50, 45, 47, 43, 50, 45, 43, 45, 47, 43]
+    roots = [50, 45, 47, 43, 50, 45, 43, 45]
     chords = [
         (note(50), note(57), note(62), note(66)),
         (note(45), note(52), note(57), note(61)),
@@ -200,25 +202,22 @@ def make_cover_bgm() -> None:
         bar_start = bar * beat * 4
         root = roots[bar]
         chord = chords[bar % len(chords)]
-        add_pad(buf, bar_start, beat * 4.2, chord, 0.047)
-        for pulse in range(8):
-            pulse_start = bar_start + pulse * beat / 2
-            add_hat(buf, pulse_start, 0.040 if pulse % 2 == 0 else 0.028, pulse == 7)
+        add_pad(buf, bar_start, beat * 4.25, chord, 0.064)
+        for pulse in range(4):
+            pulse_start = bar_start + pulse * beat
             chord_note = chord[(pulse + bar) % len(chord)]
-            add_pluck(buf, pulse_start + beat * 0.23, beat * 0.72, chord_note * 2, 0.090)
+            add_pluck(buf, pulse_start + beat * 0.16, beat * 1.18, chord_note * 2, 0.052)
         for beat_index in range(4):
             beat_start = bar_start + beat_index * beat
-            add_kick(buf, beat_start, 0.17 if beat_index in (0, 2) else 0.10)
-            add_bass(buf, beat_start, beat * 0.72, note(root + (7 if beat_index == 3 else 0)), 0.135)
-            if beat_index in (1, 3):
-                add_clap(buf, beat_start, 0.095)
-                add_wood_click(buf, beat_start + 0.018, 0.040)
-        if bar % 2 == 1:
-            add_soft_drum(buf, bar_start + beat * 3.5, 0.075)
+            if beat_index in (0, 2):
+                add_soft_drum(buf, beat_start, 0.062 if beat_index == 0 else 0.042)
+                add_bass(buf, beat_start, beat * 1.35, note(root), 0.082)
+        if bar in (3, 7):
+            add_wood_click(buf, bar_start + beat * 3.5, 0.022)
 
     melody = [
-        74, None, 78, 81, 83, None, 81, 78,
-        76, 78, None, 81, 86, 83, 81, None,
+        74, None, None, 78, None, 81, None, None,
+        76, None, 78, None, None, 74, None, None,
     ]
     step_time = beat / 2
     for step in range(bars * 8):
@@ -226,9 +225,9 @@ def make_cover_bgm() -> None:
         if pitch is None:
             continue
         start = step * step_time
-        add_bright_lead(buf, start, beat * 0.72, note(pitch), 0.165)
-        if step % 8 in (0, 4):
-            add_chime(buf, start + 0.025, beat * 0.85, note(pitch + 12), 0.045)
+        add_chime(buf, start, beat * 1.35, note(pitch), 0.11)
+        if step % 16 == 0:
+            add_chime(buf, start + 0.08, beat * 1.7, note(pitch + 12), 0.025)
 
     for index in range(len(buf)):
         t = index / SAMPLE_RATE
@@ -238,12 +237,14 @@ def make_cover_bgm() -> None:
 
 
 def make_game_bgm() -> None:
-    bpm = 160
+    # Moderate game pulse for a 30-second round. It should support attention,
+    # not turn the timer into a frantic experience.
+    bpm = 124
     beat = 60 / bpm
-    bars = 10
+    bars = 8
     duration = bars * beat * 4
     buf = empty(duration)
-    roots = [50, 47, 43, 45, 50, 47, 43, 45, 47, 45]
+    roots = [50, 47, 43, 45, 50, 47, 43, 45]
     chords = [
         (note(50), note(57), note(62), note(66)),
         (note(47), note(54), note(59), note(62)),
@@ -255,24 +256,22 @@ def make_game_bgm() -> None:
         bar_start = bar * beat * 4
         root = roots[bar]
         chord = chords[bar % len(chords)]
-        add_pad(buf, bar_start, beat * 4.15, chord, 0.034)
-        for pulse in range(16):
-            pulse_start = bar_start + pulse * beat / 4
-            add_hat(buf, pulse_start, 0.028 if pulse % 4 else 0.044, pulse in (7, 15))
-            if pulse % 2 == 1:
-                add_wood_click(buf, pulse_start, 0.022)
+        add_pad(buf, bar_start, beat * 4.15, chord, 0.041)
+        for pulse in range(8):
+            pulse_start = bar_start + pulse * beat / 2
+            if pulse % 2 == 0:
+                add_hat(buf, pulse_start, 0.021)
         for beat_index in range(4):
             beat_start = bar_start + beat_index * beat
-            add_kick(buf, beat_start, 0.19 if beat_index in (0, 2) else 0.105)
+            add_kick(buf, beat_start, 0.135 if beat_index in (0, 2) else 0.068)
             if beat_index in (1, 3):
-                add_clap(buf, beat_start, 0.10)
-            add_bass(buf, beat_start, beat * 0.62, note(root), 0.145)
-            add_bass(buf, beat_start + beat / 2, beat * 0.36, note(root + 7), 0.085)
-            add_pluck(buf, beat_start + beat * 0.5, beat * 0.52, chord[(beat_index + 1) % len(chord)] * 2, 0.070)
+                add_clap(buf, beat_start, 0.054)
+            add_bass(buf, beat_start, beat * 0.78, note(root), 0.108)
+            add_pluck(buf, beat_start + beat * 0.5, beat * 0.72, chord[(beat_index + 1) % len(chord)] * 2, 0.052)
 
     melody = [
-        74, 78, 81, None, 83, 81, 78, 76,
-        74, None, 78, 81, 86, 83, 81, 78,
+        74, None, 78, None, 81, None, 78, 76,
+        74, None, 78, 81, None, 83, 81, None,
     ]
     step_time = beat / 2
     for step in range(bars * 8):
@@ -280,9 +279,9 @@ def make_game_bgm() -> None:
         if pitch is None:
             continue
         start = step * step_time
-        add_bright_lead(buf, start, beat * 0.55, note(pitch), 0.135)
+        add_bright_lead(buf, start, beat * 0.78, note(pitch), 0.085)
         if step % 16 in (0, 12):
-            add_chime(buf, start, beat * 0.7, note(pitch + 12), 0.038)
+            add_chime(buf, start, beat * 0.9, note(pitch + 12), 0.025)
 
     for index in range(len(buf)):
         t = index / SAMPLE_RATE

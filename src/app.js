@@ -588,8 +588,8 @@ const els = {
 };
 
 const audio = {
-  coverBgm: new Audio("./assets/audio/cover-loop.wav"),
-  gameBgm: new Audio("./assets/audio/game-loop.wav"),
+  coverBgm: new Audio("./assets/audio/cover-loop.wav?v=20260818b"),
+  gameBgm: new Audio("./assets/audio/game-loop.wav?v=20260818b"),
   correct: new Audio("./assets/audio/correct.wav"),
   wrong: new Audio("./assets/audio/wrong.wav"),
   start: new Audio("./assets/audio/start.wav"),
@@ -603,8 +603,8 @@ for (const track of [audio.coverBgm, audio.gameBgm]) {
   track.setAttribute("playsinline", "");
   track.setAttribute("webkit-playsinline", "");
 }
-audio.coverBgm.volume = 0.38;
-audio.gameBgm.volume = 0.33;
+audio.coverBgm.volume = 0.32;
+audio.gameBgm.volume = 0.3;
 audio.correct.volume = 0.66;
 audio.wrong.volume = 0.82;
 audio.start.volume = 0.74;
