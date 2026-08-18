@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#b52d22" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="description"
+      content="江西文明答题挑战，跟随赣小文、鄱小明在30秒内点亮文明观赛、文明旅游、文明交通、文明餐桌。"
+    />
+    <title>江西文明答题挑战</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-live="polite">
+      <section id="startScreen" class="screen screen-start" data-screen="start">
+        <header class="start-topline">
+          <button id="soundBtn" class="sound-control" type="button" aria-label="切换音乐" aria-pressed="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M4.5 9.5v5h3.7l4.8 3.9V5.6L8.2 9.5H4.5Z" />
+              <path d="M16.4 8.2a5.2 5.2 0 0 1 0 7.6" />
+              <path d="M18.8 5.8a8.6 8.6 0 0 1 0 12.4" />
+            </svg>
+          </button>
+        </header>
+
+        <section class="start-map" aria-labelledby="gameTitle">
+          <div class="title-lockup">
+            <h1 id="gameTitle">
+              <img class="title-logo-image" src="./assets/title-logo-jiangxi-quiz.png" alt="江西文明答题挑战" />
+            </h1>
+          </div>
+
+          <div id="coverScenes" class="cover-scenes" aria-label="四大文明场景成就">
+            <div class="cover-scene scene-watching" data-scene="watching">
+              <i aria-hidden="true">赛</i>
+              <span>文明观赛</span>
+            </div>
+            <div class="cover-scene scene-tourism" data-scene="tourism">
+              <i aria-hidden="true">游</i>
+              <span>文明旅游</span>
+            </div>
+            <div class="cover-scene scene-traffic" data-scene="traffic">
+              <i aria-hidden="true">行</i>
+              <span>文明交通</span>
+            </div>
+            <div class="cover-scene scene-dining" data-scene="dining">
+              <i aria-hidden="true">餐</i>
+              <span>文明餐桌</span>
+            </div>
+          </div>
+
+          <div class="start-companions" aria-hidden="true">
+            <div class="companion companion-boy">
+              <strong class="companion-name">鄱小明</strong>
+              <img class="ip ip-boy" src="assets/poxiaoming-front.webp" alt="" />
+            </div>
+            <div class="companion companion-girl">
+              <strong class="companion-name">赣小文</strong>
+              <img class="ip ip-girl" src="assets/ganxiaowen-front.webp" alt="" />
+            </div>
+          </div>
+          <div class="start-dialog">
+            <span class="tagline-copy"><b>四境待启</b><i>，</i><em>等你点亮</em></span>
+          </div>
+        </section>
+
+        <section class="start-entry" aria-label="开始游戏">
+          <button id="startBtn" class="primary-action start-action" type="button" aria-label="30秒限时答题">
+            <span class="start-action-time" aria-hidden="true">30</span>
+            <span class="start-action-label">秒限时答题</span>
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+        </section>
+      </section>
+
+      <section id="gameScreen" class="screen screen-game" data-screen="game" hidden>
+        <header class="game-hud">
+          <button id="quitBtn" class="back-btn" type="button" aria-label="返回首页">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M15 18 9 12l6-6" />
+            </svg>
+          </button>
+          <div class="hud-score">
+            <span>文明值</span>
+            <strong id="scoreText">0</strong>
+          </div>
+          <div class="time-orb" aria-label="剩余时间">
+            <svg viewBox="0 0 48 48" focusable="false" aria-hidden="true">
+              <circle cx="24" cy="24" r="19" />
+              <circle id="timerProgress" class="timer-progress" cx="24" cy="24" r="19" />
+            </svg>
+            <div class="time-label">
+              <strong id="timerText">30</strong>
+              <span>秒</span>
+            </div>
+          </div>
+          <div class="hud-score hud-combo">
+            <span>连击</span>
+            <strong id="comboText">00</strong>
+          </div>
+        </header>
+
+        <section class="play-stage" aria-labelledby="scenarioTitle">
+          <div class="stage-place">
+            <span id="categoryText">文明旅游</span>
+            <strong id="placeText">滕王阁</strong>
+          </div>
+
+          <article class="challenge-window" data-place="滕王阁">
+            <div id="sceneVisual" class="scene-art" aria-hidden="true">
+              <img id="sceneImage" class="scene-image" src="assets/scenes/01-tengwang-queue.webp" alt="" />
+              <span id="sceneSymbol" class="scene-symbol">阁</span>
+            </div>
+            <div class="challenge-copy">
+              <div class="round-row">
+                <span id="roundText">第 1 题</span>
+                <span id="progressText">文明印记 0/4</span>
+              </div>
+              <h2 id="scenarioTitle">排队登楼，不插队抢位</h2>
+              <p id="scenarioBody">游客按指引排队登楼，把通道留给大家安全通行。</p>
+            </div>
+          </article>
+
+          <img id="girlCoach" class="play-ip play-girl" src="assets/ganxiaowen-front.webp" alt="赣小文" />
+          <img id="boyCoach" class="play-ip play-boy" src="assets/poxiaoming-front.webp" alt="鄱小明" />
+
+          <div class="guide-bubble" id="guideBubble">
+            <strong id="coachName">鄱小明 · 答题提醒</strong>
+            <span id="guideText">看清现场，做出文明选择。</span>
+          </div>
+        </section>
+
+        <div id="feedback" class="feedback-toast" hidden></div>
+
+        <section id="routeDots" class="scene-lamps" aria-label="四大文明场景点亮进度"></section>
+
+        <section class="answer-actions" aria-label="判断按钮">
+          <button id="civilizedBtn" class="answer-btn civilized" type="button">
+            <span class="answer-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M7 10v10H4V10h3zm4.2 10c-1.1 0-2-.9-2-2v-7.2c0-.5.2-1 .5-1.4L14.2 4c.5-.7 1.8-.3 1.8.6V9h2.7c1.3 0 2.3 1.2 2.1 2.5l-1 5.9c-.3 1.5-1.5 2.6-3 2.6h-5.6z" />
+              </svg>
+            </span>
+            <span>点赞文明</span>
+          </button>
+          <button id="uncivilizedBtn" class="answer-btn uncivilized" type="button">
+            <span class="answer-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M12 3 22 20H2L12 3z" />
+                <path d="M12 8v5M12 16.5h.01" />
+              </svg>
+            </span>
+            <span>劝阻不文明</span>
+          </button>
+        </section>
+      </section>
+
+      <section id="resultScreen" class="screen screen-result" data-screen="result" hidden>
+        <section class="certificate" aria-labelledby="rankText">
+          <span class="certificate-mark">江西文明行动证</span>
+          <div class="result-stars" aria-hidden="true"><i></i><i></i><i></i></div>
+          <h2 id="rankText">文明新芽</h2>
+
+          <div class="score-plate">
+            <span>本次文明值</span>
+            <strong id="finalScoreText">0</strong>
+            <em id="bestScoreText">历史最佳：0</em>
+          </div>
+
+          <section class="result-stats" aria-label="挑战结果">
+            <div><span>正确率</span><strong id="accuracyText">0%</strong></div>
+            <div><span>最高连击</span><strong id="bestComboText">00</strong></div>
+            <div><span>文明值</span><strong id="shareScoreText">0</strong></div>
+          </section>
+
+          <div id="litPlaces" class="lit-places" aria-label="四大文明印记"></div>
+          <p id="rankDesc" class="result-action">继续答题，下一局把更多江西场景点亮。</p>
+        </section>
+
+        <section class="result-actions">
+          <button id="againBtn" class="primary-action" type="button">
+            <span>再玩一次</span>
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7V3h-5.7l2 2A6 6 0 1 0 18 12h2a8 8 0 1 1-16 0z" />
+            </svg>
+          </button>
+          <button id="homeBtn" class="secondary-action" type="button">返回四境</button>
+        </section>
+      </section>
+
+      <div id="notice" class="notice" hidden></div>
+    </main>
+    <script src="./src/app.js"></script>
+  </body>
+</html>

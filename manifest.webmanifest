@@ -1,0 +1,16 @@
+{
+  "name": "江西文明答题挑战",
+  "short_name": "文明答题",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eff8ef",
+  "theme_color": "#0b7a4b",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="江西文明答题挑战">
+  <rect width="64" height="64" rx="14" fill="#0b7a4b"/>
+  <path d="M13 18h38v9H13z" fill="#f4c542"/>
+  <path d="M18 27h28v22H18z" fill="#fff"/>
+  <path d="M23 34h18M23 41h13" stroke="#d8342a" stroke-width="5" stroke-linecap="round"/>
+  <path d="M18 17c4-4 8-6 14-6s10 2 14 6" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+</svg>
