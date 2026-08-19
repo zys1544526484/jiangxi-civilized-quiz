@@ -433,6 +433,13 @@ svg { display: block; }
   transform: translateY(2px);
   box-shadow: 0 0 0 1px rgba(255, 247, 205, 0.28) inset, 0 3px 8px rgba(51, 30, 22, 0.18);
 }
+.primary-action.start-action.is-loading {
+  cursor: wait;
+  filter: saturate(0.88);
+}
+.primary-action.start-action.is-loading .start-action-time {
+  animation: preload-pulse 760ms ease-in-out infinite alternate;
+}
 
 .primary-action,
 .secondary-action {
@@ -574,7 +581,9 @@ svg { display: block; }
 }
 
 .scene-art { position: relative; height: 154px; overflow: hidden; background: #b6d5c8; }
-.scene-image { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.scene-image { width: 100%; height: 100%; object-fit: cover; object-position: center; opacity: 1; transition: opacity 160ms ease; }
+.scene-art.is-loading .scene-image { opacity: 0; }
+.scene-art.is-loading { background: linear-gradient(110deg, #accabd 22%, #c9ddd3 42%, #accabd 62%); background-size: 240% 100%; animation: scene-loading 1.15s ease-in-out infinite; }
 .scene-art::after { position: absolute; inset: 0; content: ""; background: linear-gradient(180deg, transparent 66%, rgba(21, 24, 12, 0.26)); }
 .scene-symbol { position: absolute; right: 8px; bottom: 8px; z-index: 1; display: grid; width: 32px; height: 32px; place-items: center; color: #fff9db; border: 1px solid rgba(255, 233, 158, 0.92); border-radius: 50%; background: rgba(169, 47, 34, 0.92); font-size: 16px; font-weight: 950; }
 
@@ -788,6 +797,16 @@ svg { display: block; }
 @keyframes sound-pulse {
   0%, 100% { box-shadow: 0 3px 8px rgba(19, 47, 34, 0.18); transform: scale(1); }
   50% { box-shadow: 0 0 0 5px rgba(255, 230, 142, 0.28), 0 5px 12px rgba(19, 47, 34, 0.22); transform: scale(1.04); }
+}
+
+@keyframes preload-pulse {
+  from { transform: scale(0.96); box-shadow: 0 3px 6px rgba(65, 27, 20, 0.18); }
+  to { transform: scale(1.04); box-shadow: 0 0 0 5px rgba(255, 229, 133, 0.16), 0 4px 8px rgba(65, 27, 20, 0.2); }
+}
+
+@keyframes scene-loading {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
 }
 
 @keyframes companion-boy {

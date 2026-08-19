@@ -588,8 +588,8 @@ const els = {
 };
 
 const audio = {
-  coverBgm: new Audio("./assets/audio/cover-loop.wav?v=20260818b"),
-  gameBgm: new Audio("./assets/audio/game-loop.wav?v=20260818b"),
+  coverBgm: new Audio("./assets/audio/cover-loop.mp3?v=20260819a"),
+  gameBgm: new Audio("./assets/audio/game-loop.mp3?v=20260819a"),
   correct: new Audio("./assets/audio/correct.wav"),
   wrong: new Audio("./assets/audio/wrong.wav"),
   start: new Audio("./assets/audio/start.wav"),
@@ -598,11 +598,12 @@ const audio = {
 
 for (const track of [audio.coverBgm, audio.gameBgm]) {
   track.loop = true;
-  track.preload = "auto";
   track.playsInline = true;
   track.setAttribute("playsinline", "");
   track.setAttribute("webkit-playsinline", "");
 }
+audio.coverBgm.preload = "auto";
+audio.gameBgm.preload = "metadata";
 audio.coverBgm.volume = 0.32;
 audio.gameBgm.volume = 0.3;
 audio.correct.volume = 0.66;
@@ -613,6 +614,7 @@ audio.finish.volume = 0.62;
 const state = {
   screen: "start",
   deck: [],
+  preparedDeck: [],
   current: null,
   round: 0,
   score: 0,
@@ -626,7 +628,55 @@ const state = {
   timerId: null,
   locked: false,
   muted: false,
+  starting: false,
 };
+
+const imagePromises = new Map();
+const decodedImages = new Set();
+
+function preloadImage(src) {
+  if (!src) {
+    return Promise.resolve();
+  }
+  if (imagePromises.has(src)) {
+    return imagePromises.get(src);
+  }
+
+  const promise = new Promise((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => {
+      const decoded = typeof image.decode === "function" ? image.decode().catch(() => {}) : Promise.resolve();
+      decoded.then(() => {
+        decodedImages.add(src);
+        resolve();
+      }, () => {
+        decodedImages.add(src);
+        resolve();
+      });
+    };
+    image.onerror = () => resolve();
+    image.src = src;
+  });
+
+  imagePromises.set(src, promise);
+  return promise;
+}
+
+function warmScenarioImages(items, count = items.length) {
+  const urls = [...new Set(items.slice(0, count).map((item) => item?.image).filter(Boolean))];
+  return Promise.all(urls.map((src) => preloadImage(src).catch(() => {})));
+}
+
+function prepareNextDeck() {
+  state.preparedDeck = buildBalancedDeck();
+  const [firstItem, ...remainingItems] = state.preparedDeck;
+  preloadImage(firstItem?.image).then(() => {
+    audio.gameBgm.preload = "auto";
+    audio.gameBgm.load();
+    warmScenarioImages(remainingItems, 7);
+  });
+}
 
 function shuffle(items) {
   const copy = [...items];
@@ -769,7 +819,8 @@ function showScreen(name) {
 }
 
 function resetState() {
-  state.deck = buildBalancedDeck();
+  state.deck = state.preparedDeck.length ? [...state.preparedDeck] : buildBalancedDeck();
+  state.preparedDeck = [];
   state.current = null;
   state.round = 0;
   state.score = 0;
@@ -779,23 +830,44 @@ function resetState() {
   state.answered = 0;
   state.sceneStats = createSceneStats();
   state.unlockedScenes = loadAchievements();
-  state.deadline = Date.now() + GAME_SECONDS * 1000;
+  state.deadline = 0;
   state.locked = false;
 }
 
-function startGame() {
+async function startGame() {
+  if (state.starting) {
+    return;
+  }
+  state.starting = true;
   resetState();
-  showScreen("game");
+  els.startBtn.disabled = true;
+  els.againBtn.disabled = true;
+  els.startBtn.classList.add("is-loading");
+  els.startBtn.setAttribute("aria-busy", "true");
   playAudio("start");
   playBgm("gameBgm", true).catch(() => {
     // The start button is a user gesture, but older embedded browsers may still reject playback.
   });
+
+  const firstImage = state.deck[0]?.image;
+  await Promise.race([
+    preloadImage(firstImage),
+    new Promise((resolve) => window.setTimeout(resolve, 4500)),
+  ]);
+
+  state.deadline = Date.now() + GAME_SECONDS * 1000;
+  showScreen("game");
   renderRouteDots();
   updateHud();
   nextScenario();
   clearInterval(state.timerId);
   state.timerId = window.setInterval(updateTimer, 100);
   updateTimer();
+  state.starting = false;
+  els.startBtn.disabled = false;
+  els.againBtn.disabled = false;
+  els.startBtn.classList.remove("is-loading");
+  els.startBtn.removeAttribute("aria-busy");
 }
 
 function finishGame() {
@@ -808,6 +880,7 @@ function finishGame() {
   playAudio("finish");
   renderCoverScenes();
   showScreen("result");
+  prepareNextDeck();
 }
 
 function returnHome() {
@@ -817,6 +890,9 @@ function returnHome() {
   renderCoverScenes();
   showScreen("start");
   playCoverMusic();
+  if (!state.preparedDeck.length) {
+    prepareNextDeck();
+  }
 }
 
 function nextScenario() {
@@ -826,6 +902,7 @@ function nextScenario() {
   state.round += 1;
   state.current = state.deck.shift();
   renderScenario();
+  warmScenarioImages(state.deck, 4);
   hideFeedback();
   setButtonsDisabled(false);
   state.locked = false;
@@ -855,11 +932,17 @@ function renderScenario() {
   els.sceneSymbol.textContent = item.symbol;
   els.scenarioTitle.textContent = item.title;
   els.scenarioBody.textContent = item.body;
-  els.sceneVisual.className = `scene-art ${item.visual}`;
+  els.sceneVisual.className = `scene-art ${item.visual}${decodedImages.has(item.image) ? "" : " is-loading"}`;
+  els.sceneImage.fetchPriority = "high";
   els.sceneImage.src = item.image;
   els.sceneImage.alt = `${item.place}：${item.title}`;
   els.sceneVisual.setAttribute("aria-label", `${item.place}：${item.title}`);
   els.playStage.style.background = `linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 249, 225, 0.08) 42%, rgba(30, 24, 13, 0.34)), url("${item.image}") center / cover no-repeat`;
+  preloadImage(item.image).then(() => {
+    if (state.current === item) {
+      els.sceneVisual.classList.remove("is-loading");
+    }
+  });
   const coachPrefix = sceneKey === "practice" ? "这是一场文明实践，" : `这里是${item.place}，`;
   setCoach(item.host, `${coachPrefix}看清行为再做选择。`, "", item.choreo);
   updateRouteDots();
@@ -1126,3 +1209,17 @@ window.civilizedFlashGame = window.civilizedQuizGame;
 syncAppViewport();
 renderCoverScenes();
 playCoverMusic();
+
+function scheduleInitialPreload() {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(prepareNextDeck, { timeout: 900 });
+  } else {
+    window.setTimeout(prepareNextDeck, 180);
+  }
+}
+
+if (document.readyState === "complete") {
+  scheduleInitialPreload();
+} else {
+  window.addEventListener("load", scheduleInitialPreload, { once: true });
+}
