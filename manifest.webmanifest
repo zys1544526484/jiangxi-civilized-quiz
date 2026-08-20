@@ -1,6 +1,6 @@
 {
-  "name": "江西文明答题挑战",
-  "short_name": "文明答题",
+  "name": "四境点亮｜江西文明答题挑战",
+  "short_name": "四境点亮",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
