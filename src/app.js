@@ -588,8 +588,8 @@ const els = {
 };
 
 const audio = {
-  coverBgm: new Audio("./assets/audio/cover-loop.mp3?v=20260819a"),
-  gameBgm: new Audio("./assets/audio/game-loop.mp3?v=20260819a"),
+  coverBgm: new Audio("./assets/audio/cover-loop.mp3?v=20260820a"),
+  gameBgm: new Audio("./assets/audio/game-loop.mp3?v=20260820a"),
   correct: new Audio("./assets/audio/correct.wav"),
   wrong: new Audio("./assets/audio/wrong.wav"),
   start: new Audio("./assets/audio/start.wav"),
@@ -604,6 +604,7 @@ for (const track of [audio.coverBgm, audio.gameBgm]) {
 }
 audio.coverBgm.preload = "auto";
 audio.gameBgm.preload = "metadata";
+audio.coverBgm.autoplay = true;
 audio.coverBgm.volume = 0.32;
 audio.gameBgm.volume = 0.3;
 audio.correct.volume = 0.66;
@@ -668,13 +669,21 @@ function warmScenarioImages(items, count = items.length) {
   return Promise.all(urls.map((src) => preloadImage(src).catch(() => {})));
 }
 
+async function warmScenarioImagesInBatches(items, batchSize = 6) {
+  for (let index = 0; index < items.length; index += batchSize) {
+    await warmScenarioImages(items.slice(index, index + batchSize));
+  }
+}
+
 function prepareNextDeck() {
   state.preparedDeck = buildBalancedDeck();
   const [firstItem, ...remainingItems] = state.preparedDeck;
   preloadImage(firstItem?.image).then(() => {
     audio.gameBgm.preload = "auto";
     audio.gameBgm.load();
-    warmScenarioImages(remainingItems, 7);
+    warmScenarioImages(remainingItems, 7).then(() => {
+      warmScenarioImagesInBatches(remainingItems.slice(7));
+    });
   });
 }
 
@@ -790,13 +799,37 @@ function playCoverMusic() {
   });
 }
 
-function unlockCoverMusic() {
+const audioUnlockEvents = ["pointerup", "touchend", "click", "keydown"];
+
+function removeAudioUnlockListeners() {
+  audioUnlockEvents.forEach((eventName) => {
+    window.removeEventListener(eventName, unlockAudioFromGesture, true);
+  });
+}
+
+function unlockAudioFromGesture(event) {
   if (state.muted) {
     return;
   }
-  if (state.screen === "start") {
-    playCoverMusic();
+  if (event?.target instanceof Element && event.target.closest("#soundBtn")) {
+    return;
   }
+  const trackName = state.screen === "game" ? "gameBgm" : "coverBgm";
+  playBgm(trackName).then(() => {
+    els.soundBtn.classList.remove("needs-gesture");
+    removeAudioUnlockListeners();
+  }).catch(() => {});
+}
+
+function unlockWechatAudio() {
+  const bridge = window.WeixinJSBridge;
+  if (bridge?.invoke) {
+    bridge.invoke("getNetworkType", {}, () => {
+      playCoverMusic();
+    });
+    return;
+  }
+  playCoverMusic();
 }
 
 function renderCoverScenes() {
@@ -1134,6 +1167,16 @@ function renderLitPlaces() {
 }
 
 function toggleSound() {
+  const activeTrack = state.screen === "game" ? audio.gameBgm : audio.coverBgm;
+  if (!state.muted && state.screen !== "result" && activeTrack.paused) {
+    playBgm(state.screen === "game" ? "gameBgm" : "coverBgm").then(() => {
+      els.soundBtn.classList.remove("needs-gesture", "is-muted");
+      removeAudioUnlockListeners();
+    }).catch(() => {});
+    els.soundBtn.setAttribute("aria-pressed", "true");
+    showNotice("音乐已开启");
+    return;
+  }
   state.muted = !state.muted;
   els.soundBtn.classList.toggle("is-muted", state.muted);
   els.soundBtn.setAttribute("aria-pressed", String(!state.muted));
@@ -1157,10 +1200,13 @@ els.civilizedBtn.addEventListener("click", () => answer("civilized"));
 els.uncivilizedBtn.addEventListener("click", () => answer("uncivilized"));
 els.soundBtn.addEventListener("click", toggleSound);
 
-const firstTouchEvent = "PointerEvent" in window ? "pointerdown" : "touchstart";
-window.addEventListener(firstTouchEvent, unlockCoverMusic, { once: true, passive: true });
-window.addEventListener("keydown", unlockCoverMusic, { once: true });
-document.addEventListener("WeixinJSBridgeReady", playCoverMusic, { once: true });
+audioUnlockEvents.forEach((eventName) => {
+  window.addEventListener(eventName, unlockAudioFromGesture, { capture: true, passive: true });
+});
+document.addEventListener("WeixinJSBridgeReady", unlockWechatAudio, { once: true });
+if (window.WeixinJSBridge) {
+  unlockWechatAudio();
+}
 window.addEventListener("resize", syncAppViewport, { passive: true });
 window.visualViewport?.addEventListener("resize", syncAppViewport, { passive: true });
 document.addEventListener("visibilitychange", () => {
