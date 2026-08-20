@@ -537,7 +537,10 @@ const EXTRA_SCENARIOS = [
   },
 ];
 
-const QUESTION_BANK = [...SCENARIOS, ...EXTRA_SCENARIOS].filter((item) => getSceneKey(item));
+const ASSET_VERSION = "20260820b";
+const QUESTION_BANK = [...SCENARIOS, ...EXTRA_SCENARIOS]
+  .filter((item) => getSceneKey(item))
+  .map((item) => ({ ...item, image: `${item.image}?v=${ASSET_VERSION}` }));
 
 const screens = {
   start: document.getElementById("startScreen"),
@@ -603,8 +606,11 @@ for (const track of [audio.coverBgm, audio.gameBgm]) {
   track.setAttribute("webkit-playsinline", "");
 }
 audio.coverBgm.preload = "auto";
-audio.gameBgm.preload = "metadata";
+audio.gameBgm.preload = "none";
 audio.coverBgm.autoplay = true;
+for (const clip of [audio.correct, audio.wrong, audio.start, audio.finish]) {
+  clip.preload = "none";
+}
 audio.coverBgm.volume = 0.32;
 audio.gameBgm.volume = 0.3;
 audio.correct.volume = 0.66;
@@ -635,7 +641,7 @@ const state = {
 const imagePromises = new Map();
 const decodedImages = new Set();
 
-function preloadImage(src) {
+function preloadImage(src, priority = "auto") {
   if (!src) {
     return Promise.resolve();
   }
@@ -646,6 +652,7 @@ function preloadImage(src) {
   const promise = new Promise((resolve) => {
     const image = new Image();
     image.decoding = "async";
+    image.fetchPriority = priority;
     image.onload = () => {
       const decoded = typeof image.decode === "function" ? image.decode().catch(() => {}) : Promise.resolve();
       decoded.then(() => {
@@ -666,24 +673,14 @@ function preloadImage(src) {
 
 function warmScenarioImages(items, count = items.length) {
   const urls = [...new Set(items.slice(0, count).map((item) => item?.image).filter(Boolean))];
-  return Promise.all(urls.map((src) => preloadImage(src).catch(() => {})));
-}
-
-async function warmScenarioImagesInBatches(items, batchSize = 6) {
-  for (let index = 0; index < items.length; index += batchSize) {
-    await warmScenarioImages(items.slice(index, index + batchSize));
-  }
+  return Promise.all(urls.map((src) => preloadImage(src, "low").catch(() => {})));
 }
 
 function prepareNextDeck() {
   state.preparedDeck = buildBalancedDeck();
   const [firstItem, ...remainingItems] = state.preparedDeck;
-  preloadImage(firstItem?.image).then(() => {
-    audio.gameBgm.preload = "auto";
-    audio.gameBgm.load();
-    warmScenarioImages(remainingItems, 7).then(() => {
-      warmScenarioImagesInBatches(remainingItems.slice(7));
-    });
+  preloadImage(firstItem?.image, "high").then(() => {
+    warmScenarioImages(remainingItems, 1);
   });
 }
 
@@ -878,15 +875,21 @@ async function startGame() {
   els.startBtn.classList.add("is-loading");
   els.startBtn.setAttribute("aria-busy", "true");
   playAudio("start");
+  audio.gameBgm.preload = "auto";
   playBgm("gameBgm", true).catch(() => {
     // The start button is a user gesture, but older embedded browsers may still reject playback.
   });
 
   const firstImage = state.deck[0]?.image;
   await Promise.race([
-    preloadImage(firstImage),
+    preloadImage(firstImage, "high"),
     new Promise((resolve) => window.setTimeout(resolve, 4500)),
   ]);
+
+  for (const clip of [audio.correct, audio.wrong, audio.finish]) {
+    clip.preload = "auto";
+    clip.load();
+  }
 
   state.deadline = Date.now() + GAME_SECONDS * 1000;
   showScreen("game");
@@ -1255,17 +1258,4 @@ window.civilizedFlashGame = window.civilizedQuizGame;
 syncAppViewport();
 renderCoverScenes();
 playCoverMusic();
-
-function scheduleInitialPreload() {
-  if ("requestIdleCallback" in window) {
-    window.requestIdleCallback(prepareNextDeck, { timeout: 900 });
-  } else {
-    window.setTimeout(prepareNextDeck, 180);
-  }
-}
-
-if (document.readyState === "complete") {
-  scheduleInitialPreload();
-} else {
-  window.addEventListener("load", scheduleInitialPreload, { once: true });
-}
+prepareNextDeck();

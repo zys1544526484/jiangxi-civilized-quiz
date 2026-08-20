@@ -12,7 +12,10 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 SCENE_DIR = ROOT / "assets" / "scenes"
 AUDIO_DIR = ROOT / "assets" / "audio"
-MAX_SCENE_WIDTH = 960
+MAX_SCENE_WIDTH = 720
+SCENE_QUALITY = 72
+COVER_WIDTH = 720
+IP_HEIGHT = 600
 
 
 def optimize_oversized_scenes() -> None:
@@ -23,9 +26,32 @@ def optimize_oversized_scenes() -> None:
             height = round(source.height * MAX_SCENE_WIDTH / source.width)
             resized = source.resize((MAX_SCENE_WIDTH, height), Image.Resampling.LANCZOS)
             temporary = path.with_suffix(".optimized.webp")
-            resized.save(temporary, "WEBP", quality=78, method=6)
+            resized.save(temporary, "WEBP", quality=SCENE_QUALITY, method=6)
         temporary.replace(path)
         print(f"optimized {path.name}: {MAX_SCENE_WIDTH}x{height}")
+
+
+def optimize_cover_and_ip() -> None:
+    cover_path = ROOT / "assets" / "cover-four-scenes.webp"
+    with Image.open(cover_path) as source:
+        if source.width <= COVER_WIDTH:
+            print(f"kept {cover_path.name}: {source.width}x{source.height}")
+        else:
+            height = round(source.height * COVER_WIDTH / source.width)
+            resized = source.convert("RGB").resize((COVER_WIDTH, height), Image.Resampling.LANCZOS)
+            resized.save(cover_path, "WEBP", quality=76, method=6)
+            print(f"optimized {cover_path.name}: {COVER_WIDTH}x{height}")
+
+    for name in ("ganxiaowen-front.webp", "poxiaoming-front.webp"):
+        path = ROOT / "assets" / name
+        with Image.open(path) as source:
+            if source.height <= IP_HEIGHT:
+                print(f"kept {path.name}: {source.width}x{source.height}")
+                continue
+            width = round(source.width * IP_HEIGHT / source.height)
+            resized = source.convert("RGBA").resize((width, IP_HEIGHT), Image.Resampling.LANCZOS)
+            resized.save(path, "WEBP", quality=84, method=6)
+            print(f"optimized {path.name}: {width}x{IP_HEIGHT}")
 
 
 def create_mobile_title() -> None:
@@ -69,5 +95,6 @@ def create_mp3_delivery_copies() -> None:
 
 if __name__ == "__main__":
     optimize_oversized_scenes()
+    optimize_cover_and_ip()
     create_mobile_title()
     create_mp3_delivery_copies()
