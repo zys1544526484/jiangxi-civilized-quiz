@@ -1,5 +1,16 @@
 const GAME_SECONDS = 30;
 const ACHIEVEMENT_KEY = "jiangxiCivilizedAchievementsV2";
+const BEST_SCORE_KEY = "jiangxiCivilizedBest";
+const FRESH_EXPERIENCE = /(?:^|[?&])fresh=1(?:&|$)/.test(window.location.search);
+
+if (FRESH_EXPERIENCE) {
+  try {
+    localStorage.removeItem(ACHIEVEMENT_KEY);
+    localStorage.removeItem(BEST_SCORE_KEY);
+  } catch {
+    // The game still starts clean when storage is unavailable.
+  }
+}
 
 const SCENE_GROUPS = {
   watching: {
@@ -1134,13 +1145,13 @@ function updateResults() {
   const [rank] = getRank(state.score, accuracy);
   let storedBest = 0;
   try {
-    storedBest = Number(localStorage.getItem("jiangxiCivilizedBest") || 0);
+    storedBest = Number(localStorage.getItem(BEST_SCORE_KEY) || 0);
   } catch {
     // Keep the current score when storage is unavailable.
   }
   const best = Math.max(storedBest, state.score);
   try {
-    localStorage.setItem("jiangxiCivilizedBest", String(best));
+    localStorage.setItem(BEST_SCORE_KEY, String(best));
   } catch {
     // The result page still works without persistence.
   }
