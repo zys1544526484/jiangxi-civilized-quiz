@@ -615,6 +615,10 @@ for (const track of [audio.coverBgm, audio.gameBgm]) {
   track.playsInline = true;
   track.setAttribute("playsinline", "");
   track.setAttribute("webkit-playsinline", "");
+  track.setAttribute("x5-playsinline", "");
+  track.setAttribute("x-webkit-airplay", "allow");
+  track.hidden = true;
+  document.body.appendChild(track);
 }
 audio.coverBgm.preload = "auto";
 audio.gameBgm.preload = "none";
@@ -792,7 +796,11 @@ function playBgm(name, restart = false) {
       // The first user gesture will unlock seeking on restrictive browsers.
     }
   }
-  return track.play();
+  try {
+    return Promise.resolve(track.play());
+  } catch (error) {
+    return Promise.reject(error);
+  }
 }
 
 function playCoverMusic() {
@@ -807,7 +815,7 @@ function playCoverMusic() {
   });
 }
 
-const audioUnlockEvents = ["pointerup", "touchend", "click", "keydown"];
+const audioUnlockEvents = ["pointerdown", "touchstart", "click", "keydown"];
 
 function removeAudioUnlockListeners() {
   audioUnlockEvents.forEach((eventName) => {
@@ -822,7 +830,8 @@ function unlockAudioFromGesture(event) {
   if (event?.target instanceof Element && event.target.closest("#soundBtn")) {
     return;
   }
-  const trackName = state.screen === "game" ? "gameBgm" : "coverBgm";
+  const startsGame = event?.target instanceof Element && event.target.closest("#startBtn, #againBtn");
+  const trackName = state.screen === "game" || startsGame ? "gameBgm" : "coverBgm";
   playBgm(trackName).then(() => {
     els.soundBtn.classList.remove("needs-gesture");
     removeAudioUnlockListeners();
@@ -1221,6 +1230,8 @@ document.addEventListener("WeixinJSBridgeReady", unlockWechatAudio, { once: true
 if (window.WeixinJSBridge) {
   unlockWechatAudio();
 }
+window.addEventListener("load", unlockWechatAudio, { once: true });
+audio.coverBgm.addEventListener("canplay", unlockWechatAudio, { once: true });
 window.addEventListener("resize", syncAppViewport, { passive: true });
 window.visualViewport?.addEventListener("resize", syncAppViewport, { passive: true });
 document.addEventListener("visibilitychange", () => {
