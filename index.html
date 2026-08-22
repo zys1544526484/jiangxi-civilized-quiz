@@ -21,10 +21,48 @@
     <link rel="preload" href="./assets/title-logo-jiangxi-quiz.webp" as="image" type="image/webp" fetchpriority="high" />
     <link rel="preload" href="./assets/poxiaoming-front.webp" as="image" type="image/webp" />
     <link rel="preload" href="./assets/ganxiaowen-front.webp" as="image" type="image/webp" />
-    <link rel="preload" href="./assets/audio/cover-loop.mp3?v=20260820a" as="audio" type="audio/mpeg" />
+    <link rel="preload" href="./assets/audio/cover-loop.mp3?v=20260822a" as="audio" type="audio/mpeg" />
     <link rel="stylesheet" href="./src/styles.css?v=20260822a" />
   </head>
   <body>
+    <audio
+      id="coverBgm"
+      src="./assets/audio/cover-loop.mp3?v=20260822a"
+      preload="auto"
+      autoplay
+      loop
+      playsinline
+      webkit-playsinline
+      x5-playsinline
+      aria-hidden="true"
+      hidden
+    ></audio>
+    <script>
+      (() => {
+        const bgm = document.getElementById("coverBgm");
+        bgm.volume = 0.32;
+        const tryPlay = () => {
+          try {
+            const request = bgm.play();
+            if (request && typeof request.catch === "function") {
+              request.catch(() => {});
+            }
+          } catch {
+            // A later WeChat bridge or user gesture retries playback.
+          }
+        };
+        tryPlay();
+        document.addEventListener("WeixinJSBridgeReady", () => {
+          if (window.WeixinJSBridge && typeof window.WeixinJSBridge.invoke === "function") {
+            window.WeixinJSBridge.invoke("getNetworkType", {}, tryPlay);
+          } else {
+            tryPlay();
+          }
+        }, { once: true });
+        window.addEventListener("pageshow", tryPlay, { once: true });
+      })();
+    </script>
+
     <main class="app-shell" aria-live="polite">
       <section id="startScreen" class="screen screen-start" data-screen="start">
         <header class="start-topline">
@@ -206,6 +244,6 @@
 
       <div id="notice" class="notice" hidden></div>
     </main>
-    <script src="./src/app.js?v=20260822a"></script>
+    <script src="./src/app.js?v=20260822b"></script>
   </body>
 </html>

@@ -602,7 +602,7 @@ const els = {
 };
 
 const audio = {
-  coverBgm: new Audio("./assets/audio/cover-loop.mp3?v=20260820a"),
+  coverBgm: document.getElementById("coverBgm") || new Audio("./assets/audio/cover-loop.mp3?v=20260822a"),
   gameBgm: new Audio("./assets/audio/game-loop.mp3?v=20260820a"),
   correct: new Audio("./assets/audio/correct.wav"),
   wrong: new Audio("./assets/audio/wrong.wav"),
